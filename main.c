@@ -22,8 +22,8 @@
 * argc: numero de archivos en la linea de comandos
 * argv: arreglo de ruta de los archivos a leer
 */
-int main(void)
+int main(int argc, char *argv[])
 {
-    listdir(".", 0);
+    listdir(argv[1], 0);
     return 0;
 }

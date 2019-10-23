@@ -2,7 +2,7 @@
 * Encabezado de libreria de listar directorio
 * --------------------
 * Autores: Antonella Requena 15-11196
-*         Ezequiel Zabala 14-11160
+*          Ezequiel Zabala 14-11160
 *
 * Ultima fecha de modificacion: 22/09/2019
 */

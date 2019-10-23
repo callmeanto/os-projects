@@ -5,7 +5,6 @@
 #include <string.h>
 #include "listdir.h"
 
-#define DT_DIR DT_DIR
 
 /*
 * Listar directorio
@@ -41,7 +40,7 @@ void listdir(const char *name, int indent)
 
     while ((entry = readdir(dir)) != NULL)
     {
-        if (entry->d_type != NULL)
+        if (entry->d_type == 4)
         {
             char path[1024];
             if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
