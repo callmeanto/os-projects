@@ -1,11 +1,11 @@
-frecpal: frecpal.o list.o
-	gcc -ansi -Wpedantic -o frecpal frecpal.o list.o
+main: main.o listdir.o
+	gcc -ansi -Wpedantic -o main main.o listdir.o
 
-frecpal.o: frecpal.c list.h
-	gcc -ansi -Wpedantic -c frecpal.c
+main.o: main.c listdir.h
+	gcc -ansi -Wpedantic -c main.c
 
-list.o: list.h
-	gcc -ansi -Wpedantic -c list.c
+listdir.o: listdir.h
+	gcc -ansi -Wpedantic -c listdir.c
 
 clean: 
-	rm *.o frecpal
+	rm *.o main
