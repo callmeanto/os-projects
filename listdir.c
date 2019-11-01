@@ -2,9 +2,11 @@
 #include <sys/types.h>
 #include <dirent.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include "listdir.h"
 
+#define putc(_ch,_fp) _IO_putc (_ch, _fp)
 
 /*
 * Listar directorio
@@ -33,7 +35,13 @@
 void listdir(const char *name, int indent)
 {
     DIR *dir;
+    FILE *fp1,*fp2;
+    char c;
     struct dirent *entry;
+    char buffer[2000];
+    size_t read;
+
+    fp2 = fopen("output.txt", "w");
 
     if (!(dir = opendir(name)))
         return;
@@ -46,14 +54,23 @@ void listdir(const char *name, int indent)
             if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
                 continue;
             snprintf(path, sizeof(path), "%s/%s", name, entry->d_name);
-            printf("%*s[%s]\n", indent, "", entry->d_name);
+            printf("%*s[%s]\n", indent, "", entry->d_name);           
             listdir(path, indent + 2);
         }
         else
         {
             printf("%*s- %s\n", indent, "", entry->d_name);
+            fwrite(entry->d_name, 1, sizeof(entry->d_name), fp2);
         }
+ 
     }
     closedir(dir);
+
+       c = fgetc(fp2); 
+        while (c != EOF) 
+        { 
+            printf ("%c", c); 
+            c = fgetc(fp2); 
+        }
 }
 
