@@ -1,0 +1,28 @@
+­-f <nombreTar>: 
+	especifica el archivo tar a usar.
+
+-c: 
+	permite crear el archivo nombreTar. Si ya existe, lo sobreescribe.
+
+-­n: 
+	ignora todo archivo que no sea regular o directorio. Aplica a las opciones ­c, ­x y ­t.
+
+-t: 
+	Muestra el contenido del archivo tar. Usando un formato similar al del comando 'ls ­l'.
+
+-­o <nombreDirectorio>: 
+	Directorio donde colocará la salida de una extracción. Por defecto es el directorio actual.
+
+-­z <desp>: 
+	cifra el contenido del archivo. Se usa sólo con la opción ­c. Utiliza la técnica de shifting <desp> bits.
+
+-­y <desp>: descifra el contenido del archivo. Se usa sólo con las opciones ­x y ­t. Utiliza la técnica básica de unshifting <desp> bits.
+
+-­x: 
+	extrae todos los archivos en <nombreTar>. Si los archivo están cifrado, debe extraerse descifrado.  
+
+-s nombreArchivo: 
+	extrae el archivo nombreArchivo en caso de existir
+
+-­v [archivo]: 
+	escribe en archivo una descripción de lo que va haciendo. En caso de no ser especificado el nombre, esta información aparecerá en el terminal.
