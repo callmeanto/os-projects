@@ -21,7 +21,7 @@ int main (int argc, char *argv[]){
 
   opterr = 0;
 
-  while ((opc = getopt (argc, argv, "f:cnto:z:y:xv:s:")) != -1)
+  while ((opc = getopt (argc, argv, "f:cnto:z:y:xv::s:")) != -1)
     switch (opc)
       {
       case 'f': //especifica el tar a usar
