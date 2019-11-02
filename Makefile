@@ -1,11 +1,11 @@
-main: main.o listdir.o
-	gcc -ansi -Wpedantic -o main main.o listdir.o
+mytar: mytar.o listdir.o
+	gcc -ansi -Wpedantic -o mytar mytar.o listdir.o
 
-main.o: main.c listdir.h
-	gcc -ansi -Wpedantic -c main.c
+mytar.o: mytar.c listdir.h
+	gcc -ansi -Wpedantic -c mytar.c
 
 listdir.o: listdir.h
 	gcc -ansi -Wpedantic -c listdir.c
 
 clean: 
-	rm *.o main
+	rm *.o mytar
