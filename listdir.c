@@ -24,7 +24,7 @@
 * Funcion: Listar directorio
 * --------------------
 * Revisa si ya existe la palabra en la lista, si existe aumenta el contador y retorna
-* sino, crea el nodo y lo guarda
+* Si no, crea el nodo y lo guarda
 * Usamos una variable auxiliar newnode como puntero al nodo que se esta revisando
 * 
 * head: puntero de la cabeza de la lista

@@ -29,6 +29,7 @@
 * determine si el string matchea al patron dado.
 * compila la expresion, y luego libera el espacio creado
 * retorna 1 si matchea y 0 si no
+*
 * string: palabra a comparar con regex
 * patter: patron para construir la expresion regular
 */
@@ -167,23 +168,23 @@ int main(int argc, char *argv[])
 
         /* Caso en el que reporta un comportamiento no esperado */
         case '?':
-            /* si opt coincide con algun caracter opcion con argumento, 
+            /* Si opt coincide con algun caracter opcion con argumento, 
                es porque alguno de ellos fue ingresado sin su respectivo argumento */
             if (optopt == 'f' || optopt == 'o' || optopt == 'z' || optopt == 'y' || optopt == 's')
                 fprintf(stderr, "La opción -%c necesita un argumento.\n", optopt);
 
-            /* si optopt posee otra cosa que es imprimible, es porque se leyo un caracter
+            /* Si optopt posee otra cosa que es imprimible, es porque se leyo un caracter
                no admisible en las opciones */
             else if (isprint(optopt))
                 fprintf(stderr, "Opción desconocida '-%c'\n", optopt);
 
             return 1;
-        /* default case, aborta el programa */
+        /* Default case, aborta el programa */
         default:
             abort();
         }
 
-    /** Registramos los argumentos adicionales (path de directorios) en un arreglo */
+    /* Registramos los argumentos adicionales (path de directorios) en un arreglo */
     int i = 0;
     for (index = optind; index < argc; index++)
     {
