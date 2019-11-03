@@ -32,7 +32,7 @@
 * retorna 1 si matchea y 0 si no
 *
 * string: palabra a comparar con regex
-* patter: patron para construir la expresion regular
+* pattern: patron para construir la expresion regular
 */
 int match(char *string, const char *pattern)
 {
