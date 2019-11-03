@@ -201,11 +201,17 @@ int main(int argc, char *argv[])
 
     /* Opcion -tf: Mostrar contenido del tar en CLI */
     if (fvalue != NULL && tflag != 0)
-        tar_print(fvalue, 0);
-    /* Opcion -xf: Extraer archivo */
+        tar_print(fvalue, 0, yvalue);
+
+    /* Opcion -xf: Extraer archivos */
     if (fvalue != NULL && xflag != 0)
     {
-        tar_extract(fvalue,yvalue)
+        tar_extract(fvalue, yvalue, ovalue, NULL);
+    }
+    /* Opcion -xs: Extraer un archivo */
+    if (fvalue != NULL && svalue != NULL)
+    {
+        tar_extract(fvalue, yvalue, ovalue, svalue);
     }
 
     return 0;
