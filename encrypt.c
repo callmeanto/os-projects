@@ -80,7 +80,7 @@ int encryptArchive(FILE *fmytar, int n)
 
 	fseek(fmytar,8,SEEK_SET);
 	fputc('1',fmytar); /* Actualiza la bandera para indicar que se cifró*/
-	fseek(fmytar, 11, SEEK_SET);
+	fseek(fmytar, 10, SEEK_SET);
 	/* Lee un caracter a la vez mientras no sea EOF */
 	while ((c_actual = fgetc(fmytar)) != EOF) 
 	{
@@ -127,7 +127,7 @@ int decryptArchive(FILE *fmytar, int n)
 
 	fseek(fmytar,8,SEEK_SET);
 	fputc('0',fmytar); /* Actualiza la bandera para indicar que se descifró*/
-	fseek(fmytar, 11, SEEK_SET);
+	fseek(fmytar, 10, SEEK_SET);
 	/* Lee un caracter a la vez mientras no sea EOF */
 	while ((c_actual = fgetc(fmytar)) != EOF)
 	{
@@ -140,7 +140,7 @@ int decryptArchive(FILE *fmytar, int n)
 	bandera_key = "KEY";
 
 	/* Mueve el puntero a un punto después de la bandera de cifrado */
-	fseek(fmytar,11,SEEK_SET);
+	fseek(fmytar,10,SEEK_SET);
 	fgets(buff,5,fmytar); /* almacena los siguientes 5 chars, buscamos "KEY" */
 
 	if (strstr(buff,bandera_key)) /* Si se consigue "KEY" en buff, bien */
