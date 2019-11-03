@@ -1,16 +1,10 @@
-/*
-* Funcion: Rotación a la derecha
-* --------------------
-* Función utilizada para el cifrado de archivos de texto. Recibe un caracter
-* (1 byte) y luego procede a rotarlo a la derecha 'z' veces. Para conseguir
-* el byte rotado (shift circular), shifteamos el byte a la derecha 'z' veces
-* con el operador >> y para setear los (8-z) bits del lado izquierdo que 
-* están en 0 utilizamos un operador OR con el shift a la izquierda del mismo
-* byte (8-z) veces. Esta función retorna el byte rotado a la derecha.
-*
-* x: caracter de un archivo que será cifrado
-* z: cantidad de veces que se rotan los bits del byte a la derecha
-*/
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define MAX 50
+
+/*PARA CIFRAR*/
 unsigned char cshiftR(unsigned char x, int z) 
 { 
 	int n;
@@ -23,20 +17,7 @@ unsigned char cshiftR(unsigned char x, int z)
 	}
 	return (x >> n) | (x << (8 - n));
 }
-
-/*
-* Funcion: Rotación a la izquierda
-* --------------------
-* Función utilizada para el descifrado de archivos de texto. Recibe un caracter
-* (1 byte) y luego procede a rotarlo a la izquierda 'y' veces. Para conseguir
-* el byte rotado (shift circular), shifteamos el byte a la izquierda 'y' veces
-* con el operador << y para setear los (8-y) bits del lado derecho que
-* están en 0 utilizamos un operador OR con el shift a la derecha del mismo
-* byte (8-z) veces. Esta función retorna el byte rotado a la izquierda.
-* 
-* x: caracter de un archivo que será descifrado
-* z: cantidad de veces que se rotan los bits del byte a la izquierda
-*/
+/*PARA DESCIFRAR*/
 unsigned char cshiftL(unsigned char x, int y)
 {
 	int n;
@@ -50,20 +31,7 @@ unsigned char cshiftL(unsigned char x, int y)
 	return (x << n) | (x >> (8 - n));
 }
 
-/*
-* Funcion: Cifrado del archivo tar
-* --------------------
-* Si la opción -z fue marcada en la entrada, esta función cifra el archivo mytar
-* que se debió crear previamente. El cifrado consiste en rotar los bits de cada
-* byte a la derecha n veces. Esto lo logra leyendo los caracteres del archivo
-* uno por uno, rotándolos a la derecha y sustituyendo el caracter original por
-* su versión rotada. Esto funciona pues sabemos que el archivo mytar es de tipo
-* texto, por lo que cada caracter es un solo byte. Retorna 1 si el cifrado fue
-* exitoso, 0 si se intenta cifrar un archivo cifrado (error).
-*
-* fmytar: apuntador al archivo mytar 
-* n: cantidad de veces que se rotan los bits de cada byte a la derecha
-*/
+
 int encryptArchive(FILE *fmytar, int n)
 {
 	char c_actual;	/* Variable que almacena el caracter donde estoy parado */
@@ -92,23 +60,7 @@ int encryptArchive(FILE *fmytar, int n)
 	return 1;
 }
 
-/*
-* Funcion: Descifrado del archivo tar
-* --------------------
-* Si la opción -y fue marcada en la entrada, esta función descifra el archivo 
-* mytar antes de extraer su contenido total o parcialmente. El descifrado
-* consiste en rotar los bits de cada byte a la izquierda n veces. Esto lo logra 
-* leyendo los caracteres del archivo uno por uno, rotándolos a la izquierda y 
-* sustituyendo el caracter cifrado por su versión descifrada. Esto funciona
-* pues sabemos que el archivo mytar es de tipo texto, por lo que cada caracter
-* es un solo byte. Si la cantidad de rotaciones no coincide con las rotaciones
-* del cifrado, el archivo seguirá cifrado.  Retorna 1 si el descifrado fue
-* exitoso, 0 si se intenta descifrar un archivo descifrado (error), -1 si los
-* bits a rotar no coinciden con la rotación del cifrado (error).
-*
-* fmytar: apuntador al archivo mytar 
-* n: cantidad de veces que se rotan los bits de cada byte a la izquierda
-*/
+
 int decryptArchive(FILE *fmytar, int n)
 {
 	char c_actual; /* Variable que almacena el caracter donde estoy parado */
@@ -153,4 +105,64 @@ int decryptArchive(FILE *fmytar, int n)
 		printf("Error: los bits rotados no coinciden con los del cifrado.\n");
 		return 0;
 	}
+}
+
+int main ()
+{
+	char fname[MAX]; /*archivo sobre el cual trabajaremos*/
+	FILE *fp; /*puntero al archivo anterior*/
+	int n; /*llave de cifrado o cantidad de shifts sobre cada caracter*/
+	int zflag; /*indica que se desa cifrar*/
+	int yflag; /*indica que se desea descifrar*/
+	char opc; /*aqui se almacena la opcion de cifrar o la de descifrar*/
+	
+
+	printf("Hola. Con que archivo trabajaremos? ");
+	gets(fname); 
+	fp = fopen(fname, "r+");
+	if (fp == NULL)
+		{
+			printf("Error: no se ha creado el archivo %s\n",fname);
+			exit(-1); /*Si el archivo no existe, termina el programa*/
+		}
+
+	zflag = 0;
+	yflag = 0;
+	printf("Desea cifrar [z] o descifrar [y]? ");
+	scanf("%c",&opc);
+	if (opc == 'z' || opc == 'Z')
+		zflag = 1;
+	else if (opc == 'y' || opc == 'Y')
+		yflag = 1;
+	else
+	{
+		printf("Error: opcion desconocida.\nSolo 'z'/'Z' y 'y'/'Y' son validos.\n");
+		exit(-1); /*Si se escoge un caracter invalido, termina el programa*/
+	}
+	/*printf("FLAGS: z=%d y=%d\n",zflag,yflag);*/
+
+	printf("Escoja la llave de cifrado: ");
+	scanf("%d",&n);
+
+	if (zflag)
+		if (encryptArchive(fp,n))
+			printf("Cifrado fabuloso!");
+		else
+		{
+			printf("Cifrado desastroso!");
+			fclose(fp);
+			return -1;
+		}
+	if (yflag)
+		if (decryptArchive(fp,n)==1)
+			printf("Descifrado asombroso!");
+		else
+		{
+			printf("Descifrado espantoso!");
+			fclose(fp);
+			return -1;
+		}
+
+	fclose(fp);
+	return 0;
 }

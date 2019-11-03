@@ -17,9 +17,9 @@ unsigned char cshiftR(unsigned char x, int z);
 
 unsigned char cshiftL(unsigned char x, int y);
 
-void encryptArchive(FILE *fmytar, int n);
+int encryptArchive(FILE *fmytar, int n);
 
-void decryptArchive(FILE *fmytar, int n);
+int decryptArchive(FILE *fmytar, int n);
 
 
 #endif
