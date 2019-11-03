@@ -7,14 +7,11 @@
 struct tar_header{
     char name[100];
     char mode[8];
-    char owner[8];
-    char group[8];
+    char owner[20];
+    char group[20];
     char size[12];
-    char modified[12];
     char checksum[8];
     char type[1];
-    char link[100];
-    char padding[255];
 };
 
 void fexpand(FILE* f, size_t amount, int value){
@@ -57,11 +54,10 @@ void tar_add(FILE* tar_file, const char* file, const char* internal_name){
     struct tar_header header;
     memset( &header, 0, sizeof( struct tar_header ) );
     snprintf( header.name, 100, "%s", internal_name  );
-    snprintf( header.mode, 8, "%06o ", 0777 ); //You should probably query the input file for this info
-    snprintf( header.owner, 8, "%06o ", 0 ); //^
-    snprintf( header.group, 8, "%06o ", 0 ); //^
+    snprintf( header.mode, 8, "%s", "rwx" );
+    snprintf( header.owner, 20, "%s", "anto" ); 
+    snprintf( header.group, 20, "%s", "anto" ); 
     snprintf( header.size, 12, "%011o", end - 512 - index );
-    snprintf( header.modified, 12, "%011o ", time(0) ); //Again, get this from the filesystem
     memset( header.checksum, ' ', 8);
     header.type[0] = '0';
 
