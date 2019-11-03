@@ -1,4 +1,5 @@
-#include "listdir.h"
+#include "tarfunc.h"
+#include "encrypt.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -21,7 +22,7 @@
 *             Ezequiel Zabala 14-11160
 * Ultima fecha de modificacion: 31/09/2019
 */
-   
+
 /*
 * Funcion: Match (expresion regular)
 * --------------------
@@ -191,5 +192,21 @@ int main(int argc, char *argv[])
         extrargs[i] = argv[index];
         i++;
     }
+
+    /* AHORA HACEMOS LAS LLAMADAS CORRESPONDIENTES A CADA CASO */
+
+    /* Opcion -cnf: crear tar, -z especificado */
+    if (fvalue != NULL && cflag != 0)
+        tar_create(fvalue, extrargs[0], nflag, zvalue);
+
+    /* Opcion -tf: Mostrar contenido del tar en CLI */
+    if (fvalue != NULL && tflag != 0)
+        tar_print(fvalue, 0);
+    /* Opcion -xf: Extraer archivo */
+    if (fvalue != NULL && xflag != 0)
+    {
+        tar_extract(fvalue,yvalue)
+    }
+
     return 0;
 }
