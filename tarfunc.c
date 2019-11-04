@@ -1,17 +1,18 @@
 #include "tarfunc.h"
-#include "listdir.h"
 #include "encrypt.h"
 #include <stdio.h>
 #include <string.h>
 #include <dirent.h>
 #include <unistd.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 
 #define V_PRINT(f, fmt, ...)                 \
     if (verbosity)                           \
     {                                        \
         fprintf(f, fmt "\n", ##__VA_ARGS__); \
     }
+
 
 struct tar_header
 {
@@ -22,6 +23,22 @@ struct tar_header
     char group[20];
     long size;
 } header;
+
+/**
+ * Funcion: expandir espacio para archivo
+ * 
+ * Recibe un archivo, la cantidad de espacio a "expandir" y el
+ * valor a colocar en el archivo
+ * 
+ * f: apuntador al archivo
+ * amount: cantidad de espacio
+ * value: valor a colocar
+ */
+void fexpand(FILE* f, size_t amount, int value){
+    while( amount-- ){
+        fputc( value, f );
+    }
+}
 
 /*
 * Funcion: Agregar entrada al tar
@@ -84,9 +101,9 @@ void tar_add(char *tarname, const char *filename)
     struct tar_header header;
     memset(&header, 0, sizeof(struct tar_header));
     snprintf(header.name, 100, "%s", filename);
-    snprintf(header.mode, 20, "%06o ", 0777); //You should probably query the input file for this info
-    snprintf(header.owner, 20, "%06o ", 0);   //^
-    snprintf(header.group, 20, "%06o ", 0);   //^
+    snprintf(header.mode, 20, "%06o ", 0777);
+    snprintf(header.owner, 20, "%06o ", 0);   
+    snprintf(header.group, 20, "%06o ", 0);   
     snprintf(header.size, 12, "%011o", end - 512 - index);
     header.type[0] = '0';
 
@@ -165,8 +182,6 @@ int walk_dir(char *tar, const char *filepath, int ignoreFiles)
 * Notese que el archivo puede ser de cualquier tipo.
 * si el archivo .mytar ya poseia algo, lo sobreescribe
 * 
-* LO QUE HACE
-*
 * string: palabra a comparar con regex
 * pattern: patron para construir la expresion regular
 */
@@ -203,4 +218,75 @@ int tar_create(char *tarname, char *filename, int ignoreFiles, int shiftBytes)
     /* Finalmente, ciframos el archivo shiftBytes bytes */
     if (shiftBytes != 0)
         encryptArchive(tarfile, shiftBytes);
+}
+
+/*
+* Funcion: Extraer archivo mytar
+* --------------------
+* Recorre todo el .mytar revisando los headers de cada
+* archivo, revisando su path name, creando un directorio
+* por cada / en el nombre del archivo, si el directorio ya existia
+* no lo crea, y coloca recursivamente los archivos que van dentro de cada /
+* cuando llega a una hoja, crea un archivo con fopen y le asigna los atributos
+* especificados en su header 
+*
+* tarname: nombre del archivo
+* yvalue: llave para desencriptar archivo
+* ovalue: nombre del directorio donde colocar los archivos a extraer
+* extractFile: si es distinto de null, la funcion debe extraer solo este archivo
+*/
+int tar_extract(char *tarname, int yvalue, char *ovalue, char *extractFile){
+    DIR* outputDir; 
+
+    /* Si el usuario no especifico argumento para el flag -o, se toma el directorio
+    * actual por defecto  */
+    if(ovalue==NULL)
+        outputDir = mkdir(".","rw");
+    else
+        outputDir = mkdir(ovalue,"rw");
+    
+        
+}
+
+
+/*
+* Funcion: Imprimir contenido del tar en CLI
+* --------------------
+* Recorre todo el .mytar revisando los headers de cada
+* archivo, imprimiendo el contenido de cada header (nombre, permisos, owner, grupo), 
+* avanzando header + size para acceder a cada header 
+*
+* tarname: nombre del archivo tar a imprimir
+* indent: cantidad de espacios de indentacion (formato de impresion)
+*/
+int tar_print(char *tarname, int indent){
+    DIR *dir;
+    FILE *fp1,*fp2;
+    struct dirent *entry;
+    size_t read;
+
+    fp2 = fopen("output.txt", "w");
+
+    if (!(dir = opendir(tarname)))
+        return;
+
+    while ((entry = readdir(dir)) != NULL)
+    {
+        if (entry->d_type == 4)
+        {
+            char path[1024];
+            if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
+                continue;
+            snprintf(path, sizeof(path), "%s/%s", tarname, entry->d_name);
+            printf("%*s[%s]\n", indent, "", entry->d_name);           
+            listdir(path, indent + 2);
+        }
+        else
+        {
+            printf("%*s- %s\n", indent, "", entry->d_name);
+            fwrite(entry->d_name, 1, sizeof(entry->d_name), fp2);
+        }
+ 
+    }
+    closedir(dir);
 }
