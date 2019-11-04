@@ -4,6 +4,17 @@
 
 #define MAX 50
 
+void verbose(char *line,FILE *foutput)
+{
+	if (foutput != NULL)
+	{
+		fprintf(foutput,line);
+		fprintf(foutput,"\n");
+	}
+	else
+		printf("%s",line);
+}
+
 /*PARA CIFRAR*/
 unsigned char cshiftR(unsigned char x, int z) 
 { 
@@ -32,23 +43,36 @@ unsigned char cshiftL(unsigned char x, int y)
 }
 
 
-int encryptArchive(FILE *fmytar, int n)
-{
+int encryptArchive(FILE *fmytar, int n, int v, FILE *foutput)
+{	
 	char c_actual;	/* Variable que almacena el caracter donde estoy parado */
 	char c_cif;		/* Variable que almacena el nuevo caracter cifrado */
 	char bandera_cif[10]; /* Almacena la bandera de cifrado del archivo */
 
+	if(v)verbose("Vamos a cifrar el archivo empaquetado.\n",foutput);
+
 	fscanf(fmytar,"%s",bandera_cif); /* Recibe la bandera del archivo */
 
+	if(v)verbose("Buscamos la bandera de cifrado.\n",foutput);
+
 	if (strcmp(bandera_cif,"ENCRYPT:1") == 0)
-	{
+	{	
+		if(v)verbose("Bandera indica que ya este archivo se cifro. Error.\n",foutput);
+
 		printf("Error: ya el archivo esta cifrado.\n");
 		return 0;
 	}
 
+	if(v)verbose("Bandera indica que este archivo se puede cifrar.\n",foutput);
+
 	fseek(fmytar,8,SEEK_SET);
 	fputc('1',fmytar); /* Actualiza la bandera para indicar que se cifró*/
-	fseek(fmytar, 10, SEEK_SET);
+
+	if(v)verbose("Actualizamos la bandera para indicar que se cifro.\n",foutput);
+
+	fseek(fmytar, 11, SEEK_SET);
+	if(v)verbose("Ciframos los caracteres del archivo uno por uno.\n",foutput);
+
 	/* Lee un caracter a la vez mientras no sea EOF */
 	while ((c_actual = fgetc(fmytar)) != EOF) 
 	{
@@ -57,11 +81,14 @@ int encryptArchive(FILE *fmytar, int n)
 													caracter para sobreescribir*/
 		fputc(c_cif,fmytar); /* Sobreescribe el cifrado sobre el descifrado */
 	}
+
+	if(v)verbose("Cifrado exitoso.\n",foutput);
+	
 	return 1;
 }
 
 
-int decryptArchive(FILE *fmytar, int n)
+int decryptArchive(FILE *fmytar, int n, int v, FILE *foutput)
 {
 	char c_actual; /* Variable que almacena el caracter donde estoy parado */
 	char c_desc;   /* Variable que almacena el nuevo caracter descifrado */
@@ -69,17 +96,31 @@ int decryptArchive(FILE *fmytar, int n)
 	char *bandera_key; /* Almacena "KEY", si se consigue "KEY" en el archivo*/
 	char *buff; /* Almacena 5 bytes del archivo para buscar "KEY" luego*/
 
+	if(v)verbose("Vamos a descifrar el archivo empaquetado.\n",foutput);
+
 	fscanf(fmytar,"%s",bandera_cif); /* Recibe la bandera del archivo */
+
+	if(v)verbose("Buscamos la bandera de cifrado.\n",foutput);
 
 	if (strcmp(bandera_cif,"ENCRYPT:0") == 0)
 	{
+		if(v)verbose("Bandera indica que este archivo no esta cifrado. Error.\n",foutput);
+
 		printf("Error: ya el archivo esta descifrado.\n");
 		return 0;
 	}
 
+	if(v)verbose("Bandera indica que el archivo se puede descifrar.\n",foutput);
+
 	fseek(fmytar,8,SEEK_SET);
 	fputc('0',fmytar); /* Actualiza la bandera para indicar que se descifró*/
-	fseek(fmytar, 10, SEEK_SET);
+	
+	if(v)verbose("Actualizamos la bandera para indicar que se descifro.\n",foutput);
+
+	fseek(fmytar, 11, SEEK_SET);
+
+	if(v)verbose("Desciframos los caracteres del archivo uno por uno.\n",foutput);
+
 	/* Lee un caracter a la vez mientras no sea EOF */
 	while ((c_actual = fgetc(fmytar)) != EOF)
 	{
@@ -92,15 +133,21 @@ int decryptArchive(FILE *fmytar, int n)
 	bandera_key = "KEY";
 
 	/* Mueve el puntero a un punto después de la bandera de cifrado */
-	fseek(fmytar,10,SEEK_SET);
+	fseek(fmytar,11,SEEK_SET);
+
+	if(v)verbose("Almaceno los 5 bytes después de la bandera de cifrado.\n",foutput);
+
 	fgets(buff,5,fmytar); /* almacena los siguientes 5 chars, buscamos "KEY" */
 
 	if (strstr(buff,bandera_key)) /* Si se consigue "KEY" en buff, bien */
-	{
+	{	
+		if(v)verbose("Consegui la bandera 'KEY'. Cifrado exitoso.\n",foutput);
+
 		return 1;
 	}
 	else
 	{
+		if(v)verbose("No conseguí la bandera 'KEY'. Cifrado fallo.\n",foutput);
 		/* si no se consigue "KEY" la rotación de bits no descifró el archivo */
 		printf("Error: los bits rotados no coinciden con los del cifrado.\n");
 		return 0;
@@ -114,7 +161,11 @@ int main ()
 	int n; /*llave de cifrado o cantidad de shifts sobre cada caracter*/
 	int zflag; /*indica que se desa cifrar*/
 	int yflag; /*indica que se desea descifrar*/
+	int vflag;
 	char opc; /*aqui se almacena la opcion de cifrar o la de descifrar*/
+	char opc2;
+	char opc3;
+	FILE *foutput;
 	
 
 	printf("Hola. Con que archivo trabajaremos? ");
@@ -126,8 +177,10 @@ int main ()
 			exit(-1); /*Si el archivo no existe, termina el programa*/
 		}
 
+	vflag = 0;
 	zflag = 0;
 	yflag = 0;
+
 	printf("Desea cifrar [z] o descifrar [y]? ");
 	scanf("%c",&opc);
 	if (opc == 'z' || opc == 'Z')
@@ -139,13 +192,30 @@ int main ()
 		printf("Error: opcion desconocida.\nSolo 'z'/'Z' y 'y'/'Y' son validos.\n");
 		exit(-1); /*Si se escoge un caracter invalido, termina el programa*/
 	}
-	/*printf("FLAGS: z=%d y=%d\n",zflag,yflag);*/
+
+	printf("Verbosity?[y]/[n] ");
+	foutput = NULL;
+	scanf(" %c",&opc2);
+	if (opc2 == 'y')
+	{	
+		
+		vflag = 1;
+		printf("En un archivo?[y]/[n] ");
+		scanf(" %c",&opc3);
+		if (opc3 == 'y')
+			foutput = fopen("output.txt", "w");
+	}
+
+
+
+	
+	/*printf("FLAGS: z=%d y=%d v=%d fname2=%s\n",zflag,yflag,vflag,fname2);*/
 
 	printf("Escoja la llave de cifrado: ");
 	scanf("%d",&n);
 
 	if (zflag)
-		if (encryptArchive(fp,n))
+		if (encryptArchive(fp,n,vflag,foutput))
 			printf("Cifrado fabuloso!");
 		else
 		{
@@ -154,7 +224,7 @@ int main ()
 			return -1;
 		}
 	if (yflag)
-		if (decryptArchive(fp,n)==1)
+		if (decryptArchive(fp,n,vflag,foutput)==1)
 			printf("Descifrado asombroso!");
 		else
 		{
@@ -163,6 +233,11 @@ int main ()
 			return -1;
 		}
 
+
 	fclose(fp);
+	if(foutput != NULL){
+		fclose(foutput);
+	}
+
 	return 0;
 }

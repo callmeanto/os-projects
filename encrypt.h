@@ -13,13 +13,15 @@
 
 
 /* ************** Declaracion de Funciones *************** */
+void verbose(char *line, FILE *foutput);
+
 unsigned char cshiftR(unsigned char x, int z);
 
 unsigned char cshiftL(unsigned char x, int y);
 
-int encryptArchive(FILE *fmytar, int n);
+int encryptArchive(FILE *fmytar, int n, int v, FILE *foutput);
 
-int decryptArchive(FILE *fmytar, int n);
+int decryptArchive(FILE *fmytar, int n, int v, FILE *foutput);
 
 
 #endif
