@@ -10,7 +10,6 @@ struct tar_header{
     char owner[20];
     char group[20];
     char size[12];
-    char checksum[8];
     char type[1];
 };
 
@@ -58,7 +57,6 @@ void tar_add(FILE* tar_file, const char* file, const char* internal_name){
     snprintf( header.owner, 20, "%s", "anto" ); 
     snprintf( header.group, 20, "%s", "anto" ); 
     snprintf( header.size, 12, "%011o", end - 512 - index );
-    memset( header.checksum, ' ', 8);
     header.type[0] = '0';
 
     //Calculate the checksum
@@ -69,7 +67,6 @@ void tar_add(FILE* tar_file, const char* file, const char* internal_name){
         checksum += bytes[i];
     }
 
-    snprintf( header.checksum, 8, "%06o ", checksum );
 
     //Save the new end to return to after writing the header
     end = ftell(tar_file);

@@ -21,7 +21,7 @@ struct tar_header
     char owner[20];
     char group[20];
     long size;
-};
+} header;
 
 /*
 * Funcion: Agregar entrada al tar
@@ -39,20 +39,26 @@ struct tar_header
 * filepath: char con el nombre del archivo a empaquetar
 * ignoreFiles: 1 si hay que ignorarlos, 0 sino
 */
-void tar_add(FILE *tarfile, const char *filename)
+void tar_add(char *tarname, const char *filename)
 {
-    /* Get current position; round to a multiple of 512 if we aren't there already */
+    /*  Creamos un archivo de nombre tarfile */
+    FILE *tarfile = fopen(tarname, "wr");
+
+    /* Obtener indice de posicion actual en el archivo */
     size_t index = ftell(tarfile);
     size_t offset = index % 512;
     if (offset != 0)
     {
         fexpand(tarfile, 512 - offset, 0);
     }
-    //Store the index for the header to return to later
+
+    /* Guardamos el indice */
     index = ftell(tarfile);
-    //Write some space for our header
+
+    /* Creamos espacio para el header */
     fexpand(tarfile, sizeof(struct tar_header), 0);
-    //Write the input file to the tar file
+
+    /* Write the input file to the tar file */ 
     FILE *input = fopen(filename, "rb");
     if (input == NULL)
     {
@@ -112,11 +118,10 @@ void tar_add(FILE *tarfile, const char *filename)
 * filepath: char con el nombre del archivo a empaquetar
 * ignoreFiles: 1 si hay que ignorarlos, 0 sino
 */
-int walk_dir(FILE *tar, const char *filepath, int ignoreFiles)
+int walk_dir(char *tar, const char *filepath, int ignoreFiles)
 {
     DIR *dir;
     struct dirent *entry;
-    char buffer[2000];
     size_t read;
 
     if (!(dir = opendir(filepath)))
@@ -168,7 +173,8 @@ int walk_dir(FILE *tar, const char *filepath, int ignoreFiles)
 int tar_create(char *tarname, char *filename, int ignoreFiles, int shiftBytes)
 {
 
-    size_t index; /* Variable para */
+    size_t index; /* Variable con apuntador al ultimo caracter leido del archivo */
+
 
     /*  Creamos un archivo de nombre tarfile */
     FILE *tarfile = fopen(tarname, "wr");
@@ -186,16 +192,15 @@ int tar_create(char *tarname, char *filename, int ignoreFiles, int shiftBytes)
     }
 
     /* Creamos el espacio para la metadata */
-    struct tar_header headers[20000];
+    struct tar_header headers[2000];
 
     /*  Lo guardamos al inicio del archivo */
-    fwrite(headers, 6, sizeof(headers), tarfile);
+    fwrite(headers, sizeof(header), sizeof(headers), tarfile);
 
     /* Ahora agregamos nuevas entradas al archivo mytar */
-    walk_dir(tarfile, filename, ignoreFiles);
+    walk_dir(tarname, filename, ignoreFiles);
 
     /* Finalmente, ciframos el archivo shiftBytes bytes */
-
     if (shiftBytes != 0)
         encryptArchive(tarfile, shiftBytes);
 }
