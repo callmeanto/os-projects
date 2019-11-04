@@ -23,13 +23,12 @@
 /*
 * Funcion: Listar directorio
 * --------------------
-* Revisa si ya existe la palabra en la lista, si existe aumenta el contador y retorna
-* Si no, crea el nodo y lo guarda
-* Usamos una variable auxiliar newnode como puntero al nodo que se esta revisando
-* 
-* head: puntero de la cabeza de la lista
-* newword: puntero de string a insertar
-* return: el puntero de la cabeza
+* Recorre el directorio dado en la entrada recursivamente, 
+* si el archivo que esta revisando es directorio, imprime
+*
+* name: puntero del nombre del archivo (dir o regular)
+* indent: espacio de indentacion con el que imprime
+*
 */
 
 void listdir(const char *name, int indent)
