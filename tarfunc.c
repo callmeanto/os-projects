@@ -7,13 +7,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#define V_PRINT(f, fmt, ...)                 \
-    if (verbosity)                           \
-    {                                        \
-        fprintf(f, fmt "\n", ##__VA_ARGS__); \
-    }
-
-
 struct tar_header
 {
     char name[100];
@@ -24,9 +17,32 @@ struct tar_header
     long size;
 } header;
 
+/*
+* Funcion: Verbosidad
+* --------------------
+* Se invoca sta función cada vez que se quiera imprimir en pantalla o en un
+* archivo lo que el programa está haciendo. Si se le pasa un apuntador FILE
+* vacío imprime en pantalla. Si el puntero apunta a una archivo abierto
+* imprime lo que se encuentra en "line" en el archivo referenciado por 
+* por foutput.
+*
+* line: linea que se quiere imprimir en pantalla o almacenar en un archivo
+* foutput: apuntador a un archivo de registro
+*/
+void verbose(char *line, FILE *foutput)
+{
+    if (foutput != NULL)
+    {
+        fprintf(foutput,line);
+        fprintf(foutput,"\n");
+    }
+    else
+        printf("%s",line);
+}
+
 /**
  * Funcion: expandir espacio para archivo
- * 
+ * --------------------
  * Recibe un archivo, la cantidad de espacio a "expandir" y el
  * valor a colocar en el archivo
  * 
@@ -56,8 +72,11 @@ void fexpand(FILE* f, size_t amount, int value){
 * filepath: char con el nombre del archivo a empaquetar
 * ignoreFiles: 1 si hay que ignorarlos, 0 sino
 */
-void tar_add(char *tarname, const char *filename)
+void tar_add(char *tarname, const char *filename, int v, FILE *foutput)
 {
+    if(v)verbose("Vamos a agregar un archivo al mytar. ",foutput);
+
+    if(v)verbose("Abrimos el archivo.\n",foutput);
     /*  Creamos un archivo de nombre tarfile */
     FILE *tarfile = fopen(tarname, "wr");
 
@@ -79,12 +98,14 @@ void tar_add(char *tarname, const char *filename)
     FILE *input = fopen(filename, "rb");
     if (input == NULL)
     {
+        if(v)verbose("No se pudo abrir el archivo.\n",foutput);
         fprintf(stderr, "Failed to open %s for reading\n", filename);
         return;
     }
     //Copy the file content to the tar file
     while (!feof(input))
     {
+        if(v)verbose("Copiamos su contenido a archivo mytar.\n",foutput);
         char buffer[2000];
         size_t read = fread(buffer, 1, 2000, input);
         fwrite(buffer, 1, read, tarfile);
@@ -98,6 +119,7 @@ void tar_add(char *tarname, const char *filename)
         fexpand(tarfile, 512 - offset, 0);
     }
     //Fill out a new tar header
+    if(v)verbose("Llenamos el header del archivo a empaquetar\n",foutput);
     struct tar_header header;
     memset(&header, 0, sizeof(struct tar_header));
     snprintf(header.name, 100, "%s", filename);
@@ -111,6 +133,7 @@ void tar_add(char *tarname, const char *filename)
     end = ftell(tarfile);
 
     //Write the header
+    if(v)verbose("Agregamos el header al mytar.\n",foutput);
     fseek(tarfile, index, SEEK_SET);
     //  fwrite( bytes, 1, sizeof( struct tar_header ), tarfile );
 
@@ -135,12 +158,13 @@ void tar_add(char *tarname, const char *filename)
 * filepath: char con el nombre del archivo a empaquetar
 * ignoreFiles: 1 si hay que ignorarlos, 0 sino
 */
-int walk_dir(char *tar, const char *filepath, int ignoreFiles)
+int walk_dir(char *tar, const char *filepath, int ignoreFiles, int v, FILE *foutput)
 {
     DIR *dir;
     struct dirent *entry;
     size_t read;
 
+    if(v)verbose("Recorremos un directorio para agregar su contenido al archivo mytar.\n",foutput);
     if (!(dir = opendir(filepath)))
         return 1;
 
@@ -149,11 +173,13 @@ int walk_dir(char *tar, const char *filepath, int ignoreFiles)
         /* Si el archivo es de tipo directorio */
         if (entry->d_type == 4)
         {
+            if(v)verbose("Entro a un subdirectorio.\n",foutput);
             char path[1024];
             if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
                 continue;
             snprintf(path, sizeof(path), "%s/%s", filepath, entry->d_name);
-            walk_dir(tar, path, ignoreFiles);
+            if(v)verbose("Lo recorro agregando su contenido.\n",foutput);
+            walk_dir(tar, path, ignoreFiles, v, foutput);
         }
         /* Si el archivo es de otro tipo que no es regular o directorio */
         /* y el usuario pidio por linea de comandos que se ignorasen*/
@@ -167,7 +193,8 @@ int walk_dir(char *tar, const char *filepath, int ignoreFiles)
 
         /* Sino, se agrega al archivo .mytar */
         else
-            tar_add(tar, entry->d_name);
+            if(v)verbose("Encuentro un archivo valido, lo agrego a mytar.\n",foutput);
+            tar_add(tar, entry->d_name, v, foutput);
     }
     /* Al finalizar, cerramos el directorio */
     closedir(dir);
@@ -185,15 +212,16 @@ int walk_dir(char *tar, const char *filepath, int ignoreFiles)
 * string: palabra a comparar con regex
 * pattern: patron para construir la expresion regular
 */
-int tar_create(char *tarname, char *filename, int ignoreFiles, int shiftBytes)
+int tar_create(char *tarname, char *filename, int ignoreFiles, int shiftBytes, int v, FILE *foutput)
 {
 
     size_t index; /* Variable con apuntador al ultimo caracter leido del archivo */
 
-
+    if(v)verbose("Creamos el archivo tar.\n",foutput);
     /*  Creamos un archivo de nombre tarfile */
     FILE *tarfile = fopen(tarname, "wr");
 
+    if(v)verbose("Abrimos el archivo a empaquetar.\n",foutput);
     /* Abrimos el archivo a empaquetar para lectura/binario */
     FILE *inputfile = fopen(filename, "rb");
 
@@ -201,7 +229,8 @@ int tar_create(char *tarname, char *filename, int ignoreFiles, int shiftBytes)
 
     /* Si el apuntador es NULL*/
     if (inputfile == NULL)
-    {
+    {   
+        if(v)verbose("El archivo que se desea empaquetar no se pudo abrir.\n",foutput);
         fprintf(stderr, "No se puede abrir el archivo %s para lectura\n", filename);
         return 1;
     }
@@ -209,15 +238,19 @@ int tar_create(char *tarname, char *filename, int ignoreFiles, int shiftBytes)
     /* Creamos el espacio para la metadata */
     struct tar_header headers[2000];
 
+    if(v)verbose("Se crea el espacio para su metadata y se guarda en mytar.\n",foutput);
     /*  Lo guardamos al inicio del archivo */
     fwrite(headers, sizeof(header), sizeof(headers), tarfile);
 
+    if(v)verbose("Vamos a agregar otro archivo en el archivo mytar.\n",foutput);
     /* Ahora agregamos nuevas entradas al archivo mytar */
     walk_dir(tarname, filename, ignoreFiles);
 
     /* Finalmente, ciframos el archivo shiftBytes bytes */
-    if (shiftBytes != 0)
-        encryptArchive(tarfile, shiftBytes);
+    if (shiftBytes != 0){
+        if(v)verbose("Realizamos el cifrado del archivo mytar final.\n",foutput);
+        encryptArchive(tarfile, shiftBytes, v, foutput);
+    }
 }
 
 /*
@@ -235,14 +268,18 @@ int tar_create(char *tarname, char *filename, int ignoreFiles, int shiftBytes)
 * ovalue: nombre del directorio donde colocar los archivos a extraer
 * extractFile: si es distinto de null, la funcion debe extraer solo este archivo
 */
-int tar_extract(char *tarname, int yvalue, char *ovalue, char *extractFile){
+int tar_extract(char *tarname, int yvalue, char *ovalue, char *extractFile, int v, FILE *foutput){
     DIR* outputDir; 
 
+    if(v)verbose("Vamos a extraer los archivos del mytar ",foutput);
     /* Si el usuario no especifico argumento para el flag -o, se toma el directorio
     * actual por defecto  */
-    if(ovalue==NULL)
+    if(ovalue==NULL){
+        if(v)verbose("en el directorio actual.\n",foutput);
         outputDir = mkdir(".","rw");
+    }
     else
+        if(v)verbose("en el directorio especificado.\n",foutput);
         outputDir = mkdir(ovalue,"rw");
     
         
@@ -259,11 +296,13 @@ int tar_extract(char *tarname, int yvalue, char *ovalue, char *extractFile){
 * tarname: nombre del archivo tar a imprimir
 * indent: cantidad de espacios de indentacion (formato de impresion)
 */
-int tar_print(char *tarname, int indent){
+int tar_print(char *tarname, int indent, int v, FILE *foutput){
     DIR *dir;
     FILE *fp1,*fp2;
     struct dirent *entry;
     size_t read;
+
+    if(v)verbose("Vamos a recorrer el archivo mytar imprimiendo su contenido.\n",foutput);
 
     fp2 = fopen("output.txt", "w");
 
@@ -273,7 +312,8 @@ int tar_print(char *tarname, int indent){
     while ((entry = readdir(dir)) != NULL)
     {
         if (entry->d_type == 4)
-        {
+        {   
+            if(v)verbose("Entro a un subdirectorio.\n",foutput);
             char path[1024];
             if (strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0)
                 continue;
@@ -283,6 +323,7 @@ int tar_print(char *tarname, int indent){
         }
         else
         {
+            if(v)verbose("Consigo un archivo, imprimo su nombre.\n",foutput);
             printf("%*s- %s\n", indent, "", entry->d_name);
             fwrite(entry->d_name, 1, sizeof(entry->d_name), fp2);
         }
